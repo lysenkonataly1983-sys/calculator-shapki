@@ -68,7 +68,7 @@ if st.session_state.page == 'welcome':
         """)
         st.button("ДАЛІ", on_click=go_to_offer)
 
-    folder_path = get_path("photo")
+    folder_path = os.path.dirname(os.path.abspath(__file__))
     if os.path.exists(folder_path):
         files = sorted([f for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
         with col_left:
