@@ -37,7 +37,7 @@ with s3: st.markdown('<div style="text-align:left"><a href="#"><img src="https:/
 
 # --- 1. ВІТАЛЬНА СТОРІНКА (Ваш оригінальний текст) ---
 if st.session_state.page == 'welcome':
-    col_left, col_mid, col_right = st.columns([1.5, 4, 1.5])
+    col_left, col_mid, col_right = st.columns([0.35, 4, 0.35])
     with col_mid:
         st.title("🧶 KnitFormula")
         st.markdown("""
