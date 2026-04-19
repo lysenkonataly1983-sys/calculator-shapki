@@ -203,123 +203,197 @@ elif st.session_state.page == 'calc':
         st.session_state.page = 'smart'
         st.rerun()
 
-# --- 4. РЕЗУЛЬТАТИ ТА СМАРТ-ОПИС ---
+
+        # --- РЕЗУЛЬТАТИ ТА СМАРТ-ОПИС ---
 elif st.session_state.page == 'smart':
     if 'results' not in st.session_state:
-        st.warning("Будь ласка, спочатку виконайте розрахунок.")
-        st.button("⬅ ДО КАЛЬКУЛЯТОРА", on_click=go_to_calc)
+                st.warning("Будь ласка, спочатку виконайте розрахунок.")
+                st.button("⬅ ДО КАЛЬКУЛЯТОРА", on_click=go_to_calc)
     else:
-        res = st.session_state.results
-        st.markdown("## 🎥 Відеоінструкції")
-        if res['hat_type'] == "Біні":
-            st.video("https://youtu.be/9TDPhgEQjTY")
-            st.video("https://youtu.be/YtQilrx9PlA")
-            st.video("https://youtu.be/Bru0SbCVptM")
-        else:
-            st.video("https://youtu.be/9TDPhgEQjTY")
-            st.video("https://youtu.be/HgsN__pF7fA")
-            st.video("https://youtu.be/eWvXlDmyNyQ")
+                res = st.session_state.results
 
-        st.markdown(f"""
-        <div id="screenshot-area">
-            <h2 style="text-align:center; color:black; margin-bottom:0;">ТЕХНІЧНИЙ МАЛЮНОК</h2>
-            <div style="border:1px solid #eee; padding:10px; color:black; font-size:14px; margin-bottom:12px;">
-                <b>Виріб:</b> {res['hat_type']} | <b>Пряжа:</b> {res['yarn_name']} ({res['yarn_meters']})<br>
-                <b>Обхват голови:</b> {res['head_circ']} см | <b>Полотно/Резинка:</b> {res['rib_type']}
-            </div>
-        """, unsafe_allow_html=True)
+                # 1. НАЛАШТУВАННЯ ШРИФТІВ ТА ФІГУРИ
+                plt.rcParams["font.family"] = "serif"
+                plt.rcParams["font.serif"] = ["Times New Roman"]
 
-        fig, ax = plt.subplots(figsize=(8, 11) if res['hat_type'] == "Біні" else (5, 4))
-        fig.patch.set_facecolor('white')
+                fig = plt.figure(figsize=(10, 14))
+                fig.patch.set_facecolor('white')
 
-        if res['hat_type'] == "Біні":
-            n = res['num_wedges']; width = 10; base_y = 5; wedge_w = width / n; crown_top_y = 12
-            ax.plot([0, width], [0, 0], color='black', lw=2)
-            ax.plot([0, 0], [0, base_y], color='black', lw=2)
-            ax.plot([width, width], [0, base_y], color='black', lw=2)
-            for i in range(n):
-                x_start = i * wedge_w; x_mid = x_start + (wedge_w / 2); x_end = (i + 1) * wedge_w
-                ax.plot([x_start, x_mid], [base_y, crown_top_y], color='black', lw=2)
-                ax.plot([x_mid, x_end], [crown_top_y, base_y], color='black', lw=2)
-                ax.text(x_mid, base_y - 0.7, f"{res['wedge_width']}", ha='center', fontsize=10)
+                if res['hat_type'] == "Біні":
+                    report_title = "ПАРАМЕТРИ МОДЕЛІ"
+                    params_text = (f"Виріб: шапка {res['hat_type']}\n"
+                                   f"Пряжа: {res['yarn_name']} ({res['yarn_meters']})\n"
+                                   f"Обхват голови: {res['head_circ']} см\n"
+                                   f"Полотно/Резинка: {res['rib_type']}")
 
-            num_steps = int(res['wedge_width'] / 4)
-            step_y = (crown_top_y - base_y) / num_steps if num_steps > 0 else 0
-            curr_row = res['rows_before_crown']
-            for j in range(num_steps + 1):
-                y_p = base_y + (j * step_y)
-                ax.plot([0, width], [y_p, y_p], color='green', ls='--', lw=0.5, alpha=0.6)
-                ax.text(-0.2, y_p, f"{int(curr_row)} р.", ha='right', va='center', fontsize=8)
-                curr_row += res['reduction_step']
-            if res['brim_rows'] > 0:
-                ax.plot([0, width], [2, 2], color='green', ls='--', lw=1)
-                ax.text(width + 0.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9)
-            ax.text(width/2, -1.2, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
-            ax.set_xlim(-2, 13); ax.set_ylim(-2, 14)
-        else:
-            # --- МАЛЮНОК ГАРБУЗИКА (ДОДАНО ДРУГУ УБАВКУ) ---
-            ax.plot([0, 10], [0, 0], color='black', lw=2)
-            ax.plot([0, 0], [0, 8], color='black', lw=2)
-            ax.plot([10, 10], [0, 8], color='black', lw=2)
-            arc = patches.Arc((5, 8), 10, 6, theta1=0, theta2=180, lw=2, color='black'); ax.add_patch(arc)
+                    smart_text = (
+                        f"1. Наберіть {res['total_loops']} петлі/петель на щільності/№ спиць {res['dens_kar']}.\n"
+                        f"2. Пров'яжіть {res['rows_before_crown']-1} ряди/рядів (включаючи підворот) до початку клинів.\n"
+                        f"3. У наступному ряду поділіть полотно на {res['num_wedges']} клинів по {res['wedge_width']} петель/петлі.\n"
+                        f"4. Виконайте фасонні убавки в кожному клині з обох боків у кожному {round(res['reduction_step'])} ряду {res['reduction_rows_count']} раз.\n"
+                        f"5. У міжубавочних рядах в'яжіть прямо зберігаючи візерунок.\n"
+                        f"6. Зніміть усі петлі на голку та протягніть робочу нитку через них, щільно стягнувши маківку.\n"
+                        f"7. Зшийте шапку матрацним швом."
+                    )
 
-            # Підворот
-            if res['brim_rows'] > 0:
-                ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
-                ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9)
+                    plt.figtext(0.5, 0.96, report_title, fontsize=16, weight='bold', color='#8E7CC3', ha='center')
+                    plt.figtext(0.05, 0.92, " ", fontsize=12, weight='bold')
+                    plt.figtext(0.05, 0.915, params_text, fontsize=11, va='top', linespacing=1.5,
+                                bbox=dict(boxstyle='round,pad=0.8', facecolor='#f9f9f9', edgecolor='#ddd'))
 
-            # Перша убавка
-            ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
-            ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9)
-            ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=9)
+                    plt.figtext(0.05, 0.84, "СМАРТ-ОПИС:", fontsize=12, weight='bold')
+                    plt.figtext(0.05, 0.835, smart_text, fontsize=11, va='top', linespacing=1.8)
+                    plt.figtext(0.05, 0.58, "ТЕХНІЧНИЙ МАЛЮНОК:", fontsize=12, weight='bold')
 
-            # Друга убавка (вище по дузі)
-            ax.plot([2, 8], [10, 10], color='green', ls='--', lw=1)
-            ax.text(10.2, 10, f"{res['total_rows'] + 3} р.", fontsize=9)
-            ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=9)
+                    ax = fig.add_axes([0.15, 0.2, 0.7, 0.35])
+                    n = res['num_wedges']; width = 10; base_y = 5; wedge_w = width / n; crown_top_y = 12
+                    ax.plot([0, width], [0, 0], color='black', lw=2)
+                    ax.plot([0, 0], [0, base_y], color='black', lw=2)
+                    ax.plot([width, width], [0, base_y], color='black', lw=2)
 
-            # Загальна кількість
-            ax.text(5, -0.7, f"{res['total_loops']} п.", ha='center', weight='bold')
-            ax.set_xlim(-1, 16); ax.set_ylim(-2, 12)
+                    for i in range(n):
+                        x_start = i * wedge_w; x_mid = x_start + (wedge_w / 2); x_end = (i + 1) * wedge_w
+                        ax.plot([x_start, x_mid], [base_y, crown_top_y], color='black', lw=2)
+                        ax.plot([x_mid, x_end], [crown_top_y, base_y], color='black', lw=2)
+                        ax.text(x_mid, base_y - 0.7, f"{res['wedge_width']}", ha='center', fontsize=10)
 
-        ax.axis('off')
-        st.pyplot(fig)
+                    num_steps = int(res['wedge_width'] / 4)
+                    step_y = (crown_top_y - base_y) / num_steps if num_steps > 0 else 0
+                    curr_row = res['rows_before_crown']
+                    for j in range(num_steps + 1):
+                        y_p = base_y + (j * step_y)
+                        ax.plot([0, width], [y_p, y_p], color='green', ls='--', lw=0.5, alpha=0.6)
+                        ax.text(-0.2, y_p, f"{int(curr_row)} р.", ha='right', va='center', fontsize=8)
+                        curr_row += res['reduction_step']
 
-        # Смарт-опис (Ваш оригінальний текст)
-        if res['hat_type'] == "Біні":
-            st.markdown(f"""
-                <div style="background:#f9f9f9; padding:20px; border-radius:10px; color:black; border: 1px solid #ddd; font-size: 20px; line-height: 1.6;">
-                    <b style="color:#FF4B4B; font-size: 22px;">Смарт-опис (Біні):</b><br>
-                    1. Наберіть {res['total_loops']} петель на щільності/№ спиць {res['dens_kar']}.<br>
-                    2. Пров'яжіть {res['rows_before_crown']-1} рядів (включаючи підворот) до початку клинів.<br>
-                    3. У наступному ряду поділіть полотно на {res['num_wedges']} клинів по {res['wedge_width']} петель/петлі.<br>
-                    4. Виконайте фасонні убавки в кожному клині з обох боків у кожному {round(res['reduction_step'])} ряду {res['reduction_rows_count']} раз.<br>
-                    5. У міжубавочних рядах в'яжіть прямо зберігаючи візерунок.<br>
-                    6. Зніміть усі петлі на голку та протягніть робочу нитку через них, щільно стягнувши маківку.<br>
-                    7. Зшийте шапку матрацним швом.
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-                <div style="background:#f9f9f9; padding:20px; border-radius:10px; color:black; border: 1px solid #ddd; font-size: 20px; line-height: 1.6;">
-                    <b style="color:#FF4B4B; font-size: 22px;">Смарт-опис:</b><br>
-                    1. Наберіть {res['total_loops']} петель/петлі на щільності/№ спиць/гачка {res['dens_kar']}.<br>
-                    2. Пров'яжіть {res['total_rows']-1} ряди/рядів резинкою {res['rib_type']} до убавок.<br>
-                    3. Перша убавка у {res['total_rows']} ряду: кожна друга петля (залишиться {res['loops_1']} петель).<br>
-                    4. Пров'яжіть 2 ряди.<br>
-                    5. Перенесіть петлі на задню фонтуру.<br>
-                    6. Друга убавка у {res['total_rows']+3} ряду: кожна друга петля (залишиться {res['loops_2']} петель).<br>
-                    7. Пров'яжіть 2 ряди.<br>
-                    8. Зніміть усі петлі на голку та протягніть робочу нитку через них, щільно стягнувши маківку.<br>
-                    9. Зшийте шапку матрацним швом.
-                </div>
-            """, unsafe_allow_html=True)
+                    if res['brim_rows'] > 0:
+                        ax.plot([0, width], [2, 2], color='green', ls='--', lw=1)
+                        ax.text(width + 0.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
 
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            st.button("⬅ НАЗАД ДО РОЗРАХУНКУ", on_click=go_to_calc)
-        with col_btn2:
-            buf = io.BytesIO()
-            fig.savefig(buf, format="png", bbox_inches='tight', dpi=200)
-            st.download_button("💾 ЗБЕРЕГТИ РОЗРАХУНОК (PNG)", data=buf.getvalue(), file_name=f"KnitFormula_{res['hat_type']}.png", mime="image/png")
-        st.button("🏠 НА ГОЛОВНУ", on_click=go_to_welcome)
+                    ax.text(width/2, -1.2, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
+                    ax.set_xlim(-2, 13); ax.set_ylim(-2, 14); ax.axis('off')
+
+                else:
+                    # --- ПОВЕРНЕНА ЛОГІКА ГАРБУЗИКА ---
+                    report_title = "ПАРАМЕТРИ МОДЕЛІ"
+                    params_text = (f"Виріб: шапка {res['hat_type']}\n"
+                                   f"Пряжа: {res['yarn_name']} ({res['yarn_meters']})\n"
+                                   f"Обхват голови: {res['head_circ']} см\n"
+                                   f"Полотно/Резинка: {res['rib_type']}")
+                    smart_text = (
+                        f"1. Наберіть {res['total_loops']} петель/петлі на щільності/№ спиць/гачка {res['dens_kar']}.\n"
+                        f"2. Пров'яжіть {res['total_rows']-1} ряди/рядів резинкою {res['rib_type']} до убавок.\n"
+                        f"3. Перша убавка у {res['total_rows']} ряду: кожна друга петля (залишиться {res['loops_1']} петель).\n"
+                        f"4. Пров'яжіть 2 ряди.\n"
+                        f"5. Перенесіть петлі на задню фонтуру (якщо в'яжете на машині).\n"
+                        f"6. Друга убавка у {res['total_rows']+3} ряду: кожна друга петля (залишиться {res['loops_2']} петель).\n"
+                        f"7. Пров'яжіть 2 ряди.\n"
+                        f"8. Зніміть усі петлі на голку та протягніть робочу нитку через них, щільно стягнувши маківку.\n"
+                        f"9. Зшийте шапку матрацним швом."
+                    )
+
+                    plt.figtext(0.5, 0.96, report_title, fontsize=16, weight='bold', color='#8E7CC3', ha='center')
+                    plt.figtext(0.05, 0.915, params_text, fontsize=11, va='top', linespacing=1.5,
+                                bbox=dict(boxstyle='round,pad=0.8', facecolor='#f9f9f9', edgecolor='#ddd'))
+                    plt.figtext(0.05, 0.84, "СМАРТ-ОПИС:", fontsize=12, weight='bold')
+                    plt.figtext(0.05, 0.835, smart_text, fontsize=11, va='top', linespacing=1.8)
+                    plt.figtext(0.05, 0.58, "ТЕХНІЧНИЙ МАЛЮНОК:", fontsize=12, weight='bold')
+
+                    ax = fig.add_axes([0.15, 0.2, 0.7, 0.35])
+                    # Малювання контуру гарбузика
+                    ax.plot([0, 10], [0, 0], color='black', lw=2)
+                    ax.plot([0, 0], [0, 8], color='black', lw=2)
+                    ax.plot([10, 10], [0, 8], color='black', lw=2)
+
+                    import matplotlib.patches as patches
+                    arc = patches.Arc((5, 8), 10, 6, theta1=0, theta2=180, lw=2, color='black')
+                    ax.add_patch(arc)
+
+                    # Показники для гарбузика (Повернення з первинного)
+                    if res['brim_rows'] > 0:
+                        ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
+                        ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
+
+                        # --- ПЕРША УБАВКА ---
+                ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
+                ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9, va='center')
+                ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=10)
+
+                # --- ДРУГА УБАВКА (ПОВЕРНУТО) ---
+                ax.plot([1.5, 8.5], [10, 10], color='green', ls='--', lw=1)
+                ax.text(8.7, 10, f"{res['total_rows']+3} р.", fontsize=9, va='center')
+                ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=10)
+
+                # Додаткові елементи
+                if res['brim_rows'] > 0:
+                    ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
+                    ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
+
+        # Загальна кількість петель знизу
+                ax.text(5, -0.8, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
+
+                ax.set_xlim(-1, 14); ax.set_ylim(-2, 12); ax.axis('off')
+
+                # --- ВІДОБРАЖЕННЯ ТА ВІДЕО ---
+                st.pyplot(fig)
+
+                st.markdown("---")
+                st.markdown("### Відеоінструкції")
+                v_col1, v_col2, v_col3 = st.columns(3)
+                if res['hat_type'] == "Біні":
+                    with v_col1: st.video("https://youtu.be/9TDPhgEQjTY")
+                    with v_col2: st.video("https://youtu.be/YtQilrx9PlA")
+                    with v_col3: st.video("https://youtu.be/Bru0SbCVptM")
+                else:
+                    with v_col1: st.video("https://youtu.be/9TDPhgEQjTY")
+                    with v_col2: st.video("https://youtu.be/HgsN__pF7fA")
+                    with v_col3: st.video("https://youtu.be/eWvXlDmyNyQ")
+
+                # --- КНОПКИ ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                # --- СТИЛІЗАЦІЯ КНОПОК (додайте це перед колонками кнопок) ---
+                st.markdown("""
+                            <style>
+                                /* Стилізуємо всі кнопки, включаючи download_button */
+                                div.stButton > button, div.stDownloadButton > button {
+                                    background-color: #8E7CC3 !important; /* Ваш фіолетовий колір */
+                                    color: white !important;
+                                    border-radius: 5px;
+                                    border: none;
+                                    height: 3em;
+                                    width: 100%;
+                                }
+                                /* Ефект при наведенні */
+                                div.stButton > button:hover, div.stDownloadButton > button:hover {
+                                    background-color: #7665A5 !important;
+                                    color: white !important;
+                                }
+                            </style>
+                        """, unsafe_allow_html=True)
+
+
+                col_1, col_2, col_3 = st.columns(3)
+
+                with col_1:
+                    st.button("⬅ НАЗАД ДО РОЗРАХУНКУ", on_click=go_to_calc, use_container_width=True)
+
+                with col_2:
+            # Генеруємо буфер для завантаження
+                    buf = io.BytesIO()
+                    fig.savefig(buf, format="png", bbox_inches='tight', dpi=200)
+
+            # Стандартна кнопка завантаження (вона автоматично підтягне стиль теми)
+                    st.download_button(
+                label="💾 ЗБЕРЕГТИ",
+                data=buf.getvalue(),
+                file_name=f"KnitFormula_{res['hat_type']}.png",
+                mime="image/png",
+                use_container_width=True
+            )
+
+                with col_3:
+
+                    if st.button("🚪 НА ГОЛОВНУ", use_container_width=True):
+                # Повністю очищаємо сесію
+                        st.session_state.clear()
+                        st.rerun()
