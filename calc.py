@@ -315,24 +315,24 @@ elif st.session_state.page == 'smart':
                         ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
 
                         # --- ПЕРША УБАВКА ---
-                ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
-                ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9, va='center')
-                ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=10)
+                        ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
+                        ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9, va='center')
+                        ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=10)
 
                 # --- ДРУГА УБАВКА (ПОВЕРНУТО) ---
-                ax.plot([1.5, 8.5], [10, 10], color='green', ls='--', lw=1)
-                ax.text(8.7, 10, f"{res['total_rows']+3} р.", fontsize=9, va='center')
-                ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=10)
+                        ax.plot([1.5, 8.5], [10, 10], color='green', ls='--', lw=1)
+                        ax.text(8.7, 10, f"{res['total_rows']+3} р.", fontsize=9, va='center')
+                        ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=10)
 
                 # Додаткові елементи
-                if res['brim_rows'] > 0:
-                    ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
-                    ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
+                        if res['brim_rows'] > 0:
+                            ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
+                            ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
 
         # Загальна кількість петель знизу
-                ax.text(5, -0.8, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
+                            ax.text(5, -0.8, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
 
-                ax.set_xlim(-1, 14); ax.set_ylim(-2, 12); ax.axis('off')
+                            ax.set_xlim(-1, 14); ax.set_ylim(-2, 12); ax.axis('off')
 
                 # --- ВІДОБРАЖЕННЯ ТА ВІДЕО ---
                 st.pyplot(fig)
