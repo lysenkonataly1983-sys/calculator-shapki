@@ -237,7 +237,6 @@ elif st.session_state.page == 'smart':
                     )
 
                     plt.figtext(0.5, 0.96, report_title, fontsize=16, weight='bold', color='#8E7CC3', ha='center')
-                    plt.figtext(0.05, 0.92, " ", fontsize=12, weight='bold')
                     plt.figtext(0.05, 0.915, params_text, fontsize=11, va='top', linespacing=1.5,
                                 bbox=dict(boxstyle='round,pad=0.8', facecolor='#f9f9f9', edgecolor='#ddd'))
 
@@ -274,7 +273,7 @@ elif st.session_state.page == 'smart':
                     ax.set_xlim(-2, 13); ax.set_ylim(-2, 14); ax.axis('off')
 
                 else:
-                    # --- ПОВЕРНЕНА ЛОГІКА ГАРБУЗИКА ---
+                    # --- ВИПРАВЛЕНА ЛОГІКА ГАРБУЗИКА ---
                     report_title = "ПАРАМЕТРИ МОДЕЛІ"
                     params_text = (f"Виріб: шапка {res['hat_type']}\n"
                                    f"Пряжа: {res['yarn_name']} ({res['yarn_meters']})\n"
@@ -300,39 +299,28 @@ elif st.session_state.page == 'smart':
                     plt.figtext(0.05, 0.58, "ТЕХНІЧНИЙ МАЛЮНОК:", fontsize=12, weight='bold')
 
                     ax = fig.add_axes([0.15, 0.2, 0.7, 0.35])
-                    # Малювання контуру гарбузика
                     ax.plot([0, 10], [0, 0], color='black', lw=2)
                     ax.plot([0, 0], [0, 8], color='black', lw=2)
                     ax.plot([10, 10], [0, 8], color='black', lw=2)
 
-                    import matplotlib.patches as patches
                     arc = patches.Arc((5, 8), 10, 6, theta1=0, theta2=180, lw=2, color='black')
                     ax.add_patch(arc)
 
-                    # Показники для гарбузика (Повернення з первинного)
+                    # Убавки малюємо окремо (вони тепер не залежать від brim_rows)
+                    ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
+                    ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9, va='center')
+                    ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=10)
+
+                    ax.plot([1.5, 8.5], [10, 10], color='green', ls='--', lw=1)
+                    ax.text(8.7, 10, f"{res['total_rows']+3} р.", fontsize=9, va='center')
+                    ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=10)
+
                     if res['brim_rows'] > 0:
                         ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
                         ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
 
-                        # --- ПЕРША УБАВКА ---
-                        ax.plot([0, 10], [8, 8], color='green', ls='--', lw=1)
-                        ax.text(10.2, 8, f"{res['total_rows']} р.", fontsize=9, va='center')
-                        ax.text(5, 8.2, f"{res['loops_1']} п.", ha='center', fontsize=10)
-
-                # --- ДРУГА УБАВКА (ПОВЕРНУТО) ---
-                        ax.plot([1.5, 8.5], [10, 10], color='green', ls='--', lw=1)
-                        ax.text(8.7, 10, f"{res['total_rows']+3} р.", fontsize=9, va='center')
-                        ax.text(5, 10.2, f"{res['loops_2']} п.", ha='center', fontsize=10)
-
-                # Додаткові елементи
-                        if res['brim_rows'] > 0:
-                            ax.plot([0, 10], [2, 2], color='green', ls='--', lw=1)
-                            ax.text(10.2, 2, f"{res['brim_rows']} р. підгибу", fontsize=9, color='green')
-
-        # Загальна кількість петель знизу
-                            ax.text(5, -0.8, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
-
-                            ax.set_xlim(-1, 14); ax.set_ylim(-2, 12); ax.axis('off')
+                    ax.text(5, -1.2, f"{res['total_loops']} п.", ha='center', weight='bold', fontsize=12)
+                    ax.set_xlim(-1, 14); ax.set_ylim(-2, 12); ax.axis('off')
 
                 # --- ВІДОБРАЖЕННЯ ТА ВІДЕО ---
                 st.pyplot(fig)
